@@ -1,131 +1,6 @@
-# import random
-
-# # Constants representing directions
-# UP, RIGHT, DOWN, LEFT = 0, 1, 2, 3
-
-# class Cell:
-#     def __init__(self, x, y):
-#         self.x = x
-#         self.y = y
-#         self.filled = False
-#         self.no = None
-#         self.connect = [False, False, False, False]  # connections to UP, RIGHT, DOWN, LEFT
-#         self.next = [None, None, None, None]         # adjacent cells UP, RIGHT, DOWN, LEFT
-    
-#     def __repr__(self):
-#         return f"Cell({self.x}, {self.y}, filled={self.filled}, no={self.no})"
-
-# class TetrisGrid:
-#     def __init__(self, rows=9, cols=5):
-#         self.rows = rows
-#         self.cols = cols
-#         self.cells = [[Cell(x, y) for y in range(rows)] for x in range(cols)]
-#         self.num_filled = 0
-#         self.num_groups = 0
-#         self.init_neighbors()
-#         self.prob_stop_growing_at_size = [0, 0, 0.10, 0.5, 0.75, 1]
-    
-#     def init_neighbors(self):
-#         # Initialize neighbors for each cell
-#         for x in range(self.cols):
-#             for y in range(self.rows):
-#                 if y > 0:
-#                     self.cells[x][y].next[UP] = self.cells[x][y - 1]
-#                 if y < self.rows - 1:
-#                     self.cells[x][y].next[DOWN] = self.cells[x][y + 1]
-#                 if x > 0:
-#                     self.cells[x][y].next[LEFT] = self.cells[x - 1][y]
-#                 if x < self.cols - 1:
-#                     self.cells[x][y].next[RIGHT] = self.cells[x + 1][y]
-    
-#     def fill_cell(self, cell):
-#         cell.filled = True
-#         cell.no = self.num_filled
-#         self.num_filled += 1
-    
-#     def get_leftmost_empty_cells(self):
-#         left_cells = []
-#         for x in range(self.cols):
-#             for y in range(self.rows):
-#                 if not self.cells[x][y].filled:
-#                     left_cells.append(self.cells[x][y])
-#             if left_cells:
-#                 break
-#         return left_cells
-    
-#     def is_open_cell(self, cell, direction, prev_dir, size):
-#         if cell.next[direction] and not cell.next[direction].filled:
-#             if direction in [UP, DOWN] and size == 2 and (direction == prev_dir or (direction + 2) % 4 == prev_dir):
-#                 return False
-#             return True
-#         return False
-    
-#     def get_open_cells(self, cell, prev_dir, size):
-#         open_cells = []
-#         for i in range(4):
-#             if self.is_open_cell(cell, i, prev_dir, size):
-#                 open_cells.append(i)
-#         return open_cells
-    
-#     def connect_cell(self, cell, direction):
-#         cell.connect[direction] = True
-#         if cell.next[direction]:
-#             cell.next[direction].connect[(direction + 2) % 4] = True
-    
-#     def generate_grid(self):
-#         # Pre-fill a square block at columns 1 and 2, rows 4 and 5
-#         self.fill_cell(self.cells[0][3])
-#         self.fill_cell(self.cells[0][4])
-#         self.fill_cell(self.cells[1][3])
-#         self.fill_cell(self.cells[1][4])
-        
-#         while self.num_filled < self.rows * self.cols:
-#             open_cells = self.get_leftmost_empty_cells()
-#             if not open_cells:
-#                 break
-#             first_cell = cell = random.choice(open_cells)
-#             self.fill_cell(cell)
-#             size = 1
-#             prev_dir = None
-#             while size < 5:
-#                 open_directions = self.get_open_cells(cell, prev_dir, size)
-#                 if not open_directions:
-#                     break
-#                 direction = random.choice(open_directions)
-#                 new_cell = cell.next[direction]
-#                 self.connect_cell(cell, direction)
-#                 self.fill_cell(new_cell)
-#                 cell = new_cell
-#                 prev_dir = direction
-#                 size += 1
-#                 if random.random() <= self.prob_stop_growing_at_size[size]:
-#                     break
-    
-#     def print_grid(self):
-#         for y in range(self.rows):
-#             row = []
-#             for x in range(self.cols):
-#                 cell = self.cells[x][y]
-#                 if cell.filled:
-#                     row.append(f'{cell.no:02d}')
-#                 else:
-#                     row.append('..')
-#             print(' '.join(row))
-
-# # Create the grid and generate the pieces
-# tetris_grid = TetrisGrid()
-# tetris_grid.generate_grid()
-# tetris_grid.print_grid()
-
 import sys
 import random
 
-# TODO:
-# define an Obstacle class to represent a single group of contiguous wall tiles 
-# Obstacle class
-# Box Obstacle
-# Line Obstacle
-# map from tile to Obstacle
 
 def all(iter):
     for e in iter:
@@ -446,15 +321,10 @@ def gen_map():
     f.write(f"{" ".join("X"*28)}\n")
     f.write(f"{" ".join("X"*28)}\n")
     f.write(f"{" ".join("X"*28)}")
-    # f.write("x")
-    # reflect the first 14 columns to print the map
-    # print(str(tileMap))
     for i, line in enumerate(str(tileMap).splitlines()):
-        s = line[:14]
-        # print(s+s[::-1])        
+        s = line[:14]    
         f.write(f"{" ".join(s+s[::-1])}\n")
         if i == 10: c = s
     f.write(f"{" ".join("X"*28)}\n")
     f.write(f"{" ".join("X"*28)}\n")
     f.close()
-    # print(c)
