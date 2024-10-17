@@ -3,6 +3,8 @@ from pygame.locals import *
 from vector import Vector2
 from constants import *
 from random import randint
+import heapq
+from collections import deque
 
 class Entity(object):
     def __init__(self, node):
@@ -18,7 +20,6 @@ class Entity(object):
         # self.setPosition()
         # self.target = node
         self.visible = True
-        self.disablePortal = False
         self.goal = None
         self.directionMethod = self.goalDirection
         self.setStartNode(node)
@@ -28,7 +29,6 @@ class Entity(object):
         self.node = node
         self.startNode = node
         self.target = node
-        print(node)
         self.setPosition()
 
     def reset(self):
@@ -52,9 +52,6 @@ class Entity(object):
             directions = self.validDirections()
             # direction = self.randomDirection(directions) 
             direction = self.directionMethod(directions)  
-            if not self.disablePortal:
-                if self.node.neighbors[PORTAL] is not None:
-                    self.node = self.node.neighbors[PORTAL]
             self.target = self.getNewTarget(direction)
             if self.target is not self.node:
                 self.direction = direction
@@ -112,12 +109,98 @@ class Entity(object):
     def setSpeed(self, speed):
         self.speed = speed * TILEWIDTH / 16
 
+    def a_star(self, start, goal):
+        open_list = []
+        heapq.heappush(open_list, (0, start, []))
+
+        g_cost = {start: 0}
+        visited = set()
+
+        while open_list:
+            _, current_node, path = heapq.heappop(open_list)
+
+            if current_node == goal:
+                if path:
+                    return path[0]  
+                else:
+                    return STOP  
+
+            if current_node not in visited:
+                visited.add(current_node)
+
+                for direction in [UP, DOWN, LEFT, RIGHT]:
+                    neighbor = current_node.neighbors[direction]
+
+                    if neighbor and neighbor not in visited:
+                        new_g_cost = g_cost[current_node] + TILEWIDTH  
+
+                        if neighbor not in g_cost or new_g_cost < g_cost[neighbor]:
+                            g_cost[neighbor] = new_g_cost
+                            h_cost = (neighbor.position - goal.position).magnitude()
+                            f_cost = new_g_cost + h_cost
+                            heapq.heappush(open_list, (f_cost, neighbor, path + [direction]))
+
+        return STOP
+
+    def dfs(self, start, goal):
+        stack = [(start, [])]  
+        visited = set()
+
+        while stack:
+            current_node, path = stack.pop()
+            if current_node == goal:
+                if path:
+                    return path[0]  
+                else:
+                    return STOP  
+
+            if current_node not in visited:
+                visited.add(current_node)
+                for direction in [UP, DOWN, LEFT, RIGHT]:
+                    neighbor = current_node.neighbors[direction]
+                    if neighbor and neighbor not in visited:
+                        if direction != self.direction * -1:
+                            stack.append((neighbor, path + [direction]))
+        return STOP  
+
+
+    def bfs(self, start, goal):
+        queue = deque([(start, None)])  
+        visited = set()
+        visited.add(start)
+
+        while queue:
+            current_node, direction_to_current = queue.popleft()
+
+            if current_node == goal:
+                return direction_to_current 
+            for direction in [UP, DOWN, LEFT, RIGHT]:
+                neighbor = current_node.neighbors.get(direction)
+                if neighbor and neighbor not in visited:
+                    visited.add(neighbor)
+                    if direction_to_current is None:
+                        queue.append((neighbor, direction))
+                    else:
+                        queue.append((neighbor, direction_to_current))
+        return STOP
+    
+    
     def goalDirection(self, directions):
         distances = []
         for direction in directions:
             vec = self.node.position  + self.directions[direction]*TILEWIDTH - self.goal
             distances.append(vec.magnitudeSquared())
         index = distances.index(min(distances))
+        if self.goal == self.pacman.position:
+            if self.name == BLINKY:
+                direction = self.bfs(self.node, self.pacman.node)
+            if self.name == PINKY:
+                direction = self.dfs(self.node, self.pacman.node)
+            if self.name == INKY:
+                direction = self.a_star(self.node, self.pacman.node)
+            if direction is None:
+                    direction = self.pacman.direction                      
+            return direction
         return directions[index]
 
     def render(self, screen):

@@ -17,7 +17,6 @@ class GameController(object):
         self.screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
         self.background = None
         self.clock = pygame.time.Clock()
-        self.fruit = None
         self.pause = Pause(True)
         self.level = 0
         self.lives = 5
@@ -29,7 +28,6 @@ class GameController(object):
         self.lives = 5
         self.level = 0
         self.pause.paused = True
-        self.fruit = None
         self.startGame()
         self.score = 0
         self.textgroup.updateScore(self.score)
@@ -41,7 +39,6 @@ class GameController(object):
         self.pause.paused = True
         self.pacman.reset()
         self.ghosts.reset()
-        self.fruit = None
         self.textgroup.showText(READYTXT)
 
     def nextLevel(self):
@@ -56,36 +53,27 @@ class GameController(object):
         self.background.fill(BLACK)
 
     def startGame(self):
-        # self.map = generate_map(self.level)
         self.setBackground() 
-        gen_map()
-        # print(self.map)       
-        # self.mazesprites = MazeSprites(self.map, "maze1_rotation.txt")
-        # self.mazesprites = MazeSprites("maze1.txt", "maze1_rotation.txt")
-        # self.mazesprites = MazeSprites("maze1_rotation.txt", "maze1_rotation.txt")
-        self.mazesprites = MazeSprites("maze2.txt", "maze2.txt")
+        map = gen_map(self.level+1)
+        self.mazesprites = MazeSprites(map, map)
         self.background = self.mazesprites.constructBackground(self.background, self.level%5)
-        # self.nodes = NodeGroup("maze1.txt")
-        self.nodes = NodeGroup("maze2.txt")
-        self.nodes.setPortalPair((0,17), (27,17))
+        self.nodes = NodeGroup(map)
         homekey = self.nodes.createHomeNodes(11.5, 14)
+        print(homekey)
         self.nodes.connectHomeNodes(homekey, (13,14), LEFT)
         self.nodes.connectHomeNodes(homekey, (14,14), RIGHT)
         self.pacman = Pacman(self.nodes.getNodeFromTiles(9, 20))
-        # self.pellets = PelletGroup("maze1.txt")
-        self.pellets = PelletGroup("maze2.txt")
+        self.pellets = PelletGroup(map)
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
         self.ghosts.blinky.setStartNode(self.nodes.getNodeFromTiles(2+11.5, 0+14))
         self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(2+11.5, 3+14))
         self.ghosts.inky.setStartNode(self.nodes.getNodeFromTiles(0+11.5, 3+14))
-        self.ghosts.clyde.setStartNode(self.nodes.getNodeFromTiles(4+11.5, 3+14))
         self.ghosts.setSpawnNode(self.nodes.getNodeFromTiles(2+11.5, 3+14))
         self.nodes.denyHomeAccess(self.pacman)
         self.nodes.denyHomeAccessList(self.ghosts)
         self.nodes.denyAccessList(2+11.5, 3+14, LEFT, self.ghosts)
         self.nodes.denyAccessList(2+11.5, 3+14, RIGHT, self.ghosts)
         self.ghosts.inky.startNode.denyAccess(RIGHT, self.ghosts.inky)
-        self.ghosts.clyde.startNode.denyAccess(LEFT, self.ghosts.clyde)
         self.nodes.denyAccessList(12, 14, UP, self.ghosts)
         self.nodes.denyAccessList(15, 14, UP, self.ghosts)
         self.nodes.denyAccessList(12, 26, UP, self.ghosts)
@@ -98,8 +86,6 @@ class GameController(object):
         if not self.pause.paused:
             self.pacman.update(dt)
             self.ghosts.update(dt)
-            if self.fruit is not None:
-                self.fruit.update(dt)
             self.checkPelletEvents()
             self.checkGhostEvents()
         afterPauseMethod = self.pause.update(dt)
@@ -148,12 +134,12 @@ class GameController(object):
         if pellet:
             self.pellets.numEaten += 1
             self.updateScore(pellet.points)
-            if self.pellets.numEaten == 30:
-                self.ghosts.inky.startNode.allowAccess(RIGHT, self.ghosts.inky)                
-                # self.ghosts.clyde.startNode.allowAccess(LEFT, self.ghosts.clyde)
-            if self.pellets.numEaten == 40:
-                self.ghosts.clyde.startNode.allowAccess(LEFT, self.ghosts.clyde)
+            if self.pellets.numEaten == 3:
+                self.ghosts.inky.startNode.allowAccess(RIGHT, self.ghosts.inky)  
             self.pellets.pelletList.remove(pellet)
+            if self.pellets.numEaten == 40:
+                self.hideEntities()
+                self.pause.setPause(pauseTime=3, func=self.nextLevel)
             if self.pellets.isEmpty():
                 self.hideEntities()
                 self.pause.setPause(pauseTime=3, func=self.nextLevel)
@@ -169,8 +155,6 @@ class GameController(object):
     def render(self):
         self.screen.blit(self.background, (0, 0))
         self.pellets.render(self.screen)
-        if self.fruit is not None:
-            self.fruit.render(self.screen)
         self.pacman.render(self.screen)
         self.ghosts.render(self.screen)
         self.textgroup.render(self.screen)

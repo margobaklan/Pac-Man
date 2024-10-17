@@ -29,14 +29,15 @@ class PelletGroup(object):
 
                 
     def createPelletList(self, pelletfile):
-        data = self.readPelletfile(pelletfile)        
+        # data = self.readPelletfile(pelletfile)  
+        data = pelletfile     
         for row in range(data.shape[0]):
             for col in range(data.shape[1]):
                 if data[row][col] in ['.', '+']:
                     self.pelletList.append(Pellet(row, col))
                     
-    def readPelletfile(self, textfile):
-        return np.loadtxt(textfile, dtype='<U1')
+    # def readPelletfile(self, textfile):
+    #     return np.loadtxt(textfile, dtype='<U1')
     
     def isEmpty(self):
         if len(self.pelletList) == 0:

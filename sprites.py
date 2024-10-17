@@ -66,7 +66,7 @@ class PacmanSprites(Spritesheet):
 class GhostSprites(Spritesheet):
     def __init__(self, entity):
         Spritesheet.__init__(self)
-        self.x = {BLINKY:0, PINKY:2, INKY:4, CLYDE:6}
+        self.x = {BLINKY:0, PINKY:2, INKY:4}
         self.entity = entity
         self.entity.image = self.getStartImage()
                
@@ -119,17 +119,16 @@ class LifeSprites(Spritesheet):
 class MazeSprites(Spritesheet):
     def __init__(self, mazefile, rotfile):
         Spritesheet.__init__(self)
-        self.data = self.readMazeFile(mazefile)
-        # self.data = mazefile
-        self.rotdata = self.readMazeFile(rotfile)
-        print(self.data)
-        print(self.rotdata)
+        # self.data = self.readMazeFile(mazefile)
+        self.data = mazefile
+        self.rotdata = rotfile
+        # self.rotdata = self.readMazeFile(rotfile)
 
     def getImage(self, x, y):
         return Spritesheet.getImage(self, x, y, TILEWIDTH, TILEHEIGHT)
 
-    def readMazeFile(self, mazefile):
-        return np.loadtxt(mazefile, dtype='<U1')
+    # def readMazeFile(self, mazefile):
+    #     return np.loadtxt(mazefile, dtype='<U1')
 
     def constructBackground(self, background, y):
         for row in list(range(self.data.shape[0])):
